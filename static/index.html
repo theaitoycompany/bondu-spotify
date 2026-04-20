@@ -4,6 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Bondu Jukebox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
     --forest: #2F4F3F;
@@ -12,7 +15,9 @@
     --mint: #5EB8A1;
     --mint-light: #D4F0E8;
     --plum: #7B68AE;
+    --plum-light: #E4DCF0;
     --coral: #F28882;
+    --coral-light: #FDE0DD;
     --honey: #EDAA50;
     --honey-light: #FDE8C0;
     --vanilla: #FFF7EE;
@@ -23,160 +28,367 @@
     --n5: #F5F5F8;
     --green: #50B880;
     --red: #F06050;
-    --shadow-sm: 0 1px 2px rgba(35,35,44,.04), 0 1px 3px rgba(35,35,44,.05);
-    --shadow-md: 0 4px 12px rgba(35,35,44,.06), 0 2px 4px rgba(35,35,44,.04);
-    --shadow-lg: 0 12px 32px rgba(35,35,44,.08), 0 4px 8px rgba(35,35,44,.04);
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0;
-    background:
-      radial-gradient(1200px 600px at 10% -10%, var(--mint-light) 0%, transparent 50%),
-      radial-gradient(1000px 500px at 110% 10%, var(--honey-light) 0%, transparent 55%),
-      var(--vanilla);
-    background-attachment: fixed;
+    background: var(--vanilla);
     color: var(--n1);
-    font-family: "Gellix", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
-    -webkit-font-smoothing: antialiased; min-height: 100vh;
+    font-family: "Gellix", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(900px 500px at 8% -10%, rgba(212,240,232,.65) 0%, transparent 55%),
+      radial-gradient(800px 400px at 100% 10%, rgba(253,232,192,.55) 0%, transparent 55%),
+      radial-gradient(700px 400px at 60% 110%, rgba(228,220,240,.4) 0%, transparent 50%);
   }
 
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 28px 80px; }
-  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 36px; height: 36px; border-radius: 10px;
-    background: linear-gradient(135deg, var(--forest) 0%, var(--mint) 100%);
-    display: grid; place-items: center; color: white; font-weight: 700; font-size: 18px;
-    box-shadow: var(--shadow-md); }
-  header h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin: 0; color: var(--n1); }
-  header .sub { font-size: 13px; color: var(--n2); margin-top: 2px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 36px 28px 80px; }
 
-  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
-  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  /* ============ HEADER ============ */
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 44px; height: 44px; border-radius: 12px; position: relative;
+    background: var(--forest);
+    display: grid; place-items: center; color: var(--vanilla);
+    font-weight: 800; font-size: 22px; letter-spacing: -0.03em;
+    box-shadow: 0 6px 18px rgba(47,79,63,.25), inset 0 1px 0 rgba(255,255,255,.15);
+  }
+  .logo::after {
+    content: ""; position: absolute; inset: 3px; border-radius: 9px;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.15) 100%);
+    pointer-events: none;
+  }
+  header h1 {
+    font-family: "Gellix", "Inter", sans-serif;
+    font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+    margin: 0; color: var(--n1);
+  }
+  header .sub {
+    font-size: 12px; color: var(--n2); margin-top: 4px;
+    text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500;
+  }
+  .status-dot {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--n2); font-weight: 500;
+    background: rgba(255,255,255,.6); border: 1px solid var(--n4);
+    padding: 8px 14px; border-radius: 999px; backdrop-filter: blur(8px);
+  }
+  .status-dot .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 0 3px rgba(80,184,128,.2); animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+
+  /* ============ LAYOUT ============ */
+  .layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
 
   .card {
-    background: rgba(255,255,255,0.78);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(224,224,234,.6);
-    border-radius: 24px;
-    box-shadow: var(--shadow-md);
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(224,224,234,.55);
+    border-radius: 28px;
+    box-shadow: 0 1px 3px rgba(35,35,44,.02), 0 12px 32px -12px rgba(35,35,44,.08);
   }
 
-  /* Now playing */
-  .now { padding: 24px; display: grid; grid-template-columns: 160px 1fr; gap: 24px; }
-  .now .art { width: 160px; height: 160px; border-radius: 18px; background: var(--n5);
-    overflow: hidden; box-shadow: var(--shadow-lg); position: relative; }
-  .now .art::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); border-radius: inherit; pointer-events: none; }
+  /* ============ NOW PLAYING ============ */
+  .now {
+    padding: 28px; display: grid; grid-template-columns: 200px 1fr; gap: 28px;
+    position: relative; overflow: hidden;
+  }
+  .now .art {
+    width: 200px; height: 200px; border-radius: 20px; background: var(--n5);
+    overflow: hidden; position: relative;
+    box-shadow: 0 24px 48px -12px rgba(35,35,44,.25), 0 4px 12px rgba(35,35,44,.08);
+    transition: transform 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .now .art::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  }
   .now .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .now .art.playing { animation: subtle-float 4s ease-in-out infinite; }
+  @keyframes subtle-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
   .now .meta { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-  .now .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--forest-mid); margin-bottom: 6px; }
-  .now .title { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; color: var(--n1);
-    margin: 0 0 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .now .artist { font-size: 15px; color: var(--n2); margin: 0 0 16px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .progress { height: 4px; background: var(--n4); border-radius: 999px; overflow: hidden; margin-bottom: 6px; max-width: 520px; }
-  .progress > div { height: 100%; background: var(--forest); width: 0%; transition: width 1s linear; border-radius: 999px; }
-  .times { display: flex; justify-content: space-between; font-size: 11px; color: var(--n3);
-    font-variant-numeric: tabular-nums; max-width: 520px; margin-bottom: 16px; }
 
-  .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  button.ctrl { appearance: none; border: 1px solid var(--n4); background: white; color: var(--n1);
-    height: 40px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 500;
-    cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px; }
-  button.ctrl:hover { background: var(--n5); border-color: var(--n3); transform: translateY(-1px); }
-  button.ctrl:active { transform: translateY(0); }
-  button.primary { background: var(--forest); border-color: var(--forest); color: white;
-    box-shadow: 0 2px 8px rgba(47,79,63,.25); }
-  button.primary:hover { background: var(--forest-mid); border-color: var(--forest-mid); }
-  button.big { height: 48px; padding: 0 22px; font-size: 15px; font-weight: 600; }
-  button.toggle.active { background: var(--forest-light); border-color: var(--forest-mid); color: var(--forest); }
-  button.toggle.active::before { content: ""; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--forest); box-shadow: 0 0 0 3px rgba(47,79,63,.15); }
-
-  .vol { display: flex; align-items: center; gap: 10px; margin-left: auto;
-    background: white; padding: 0 14px; height: 40px; border-radius: 999px;
-    border: 1px solid var(--n4); }
-  .vol input[type=range] { accent-color: var(--forest); width: 120px; }
-  .vol .val { font-size: 12px; color: var(--n2); width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
-  .vol .label { font-size: 12px; color: var(--n2); }
-
-  /* Search */
-  .search { padding: 24px; margin-top: 24px; }
-  .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--n5);
-    padding: 4px; border-radius: 999px; width: fit-content; }
-  .tab { font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 999px;
-    color: var(--n2); cursor: pointer; transition: all 0.15s; }
-  .tab:hover { color: var(--n1); }
-  .tab.active { background: white; color: var(--n1); box-shadow: var(--shadow-sm); }
-  .search-row { display: flex; gap: 8px; }
-  .search-row input { flex: 1; height: 52px; border-radius: 16px; border: 1px solid var(--n4);
-    padding: 0 18px; font: inherit; font-size: 15px; background: white; color: var(--n1); outline: none;
-    transition: all 0.15s; box-shadow: var(--shadow-sm); }
-  .search-row input:focus { border-color: var(--forest-mid); box-shadow: 0 0 0 4px rgba(106,156,128,.15); }
-  .search-row input::placeholder { color: var(--n3); }
-
-  .grid { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
-  .result { background: white; border: 1px solid var(--n4); border-radius: 16px; padding: 10px;
-    display: flex; flex-direction: column; gap: 8px; transition: all 0.15s; cursor: pointer; position: relative; }
-  .result:hover { border-color: var(--forest-mid); transform: translateY(-3px); box-shadow: var(--shadow-md); }
-  .result .art { width: 100%; aspect-ratio: 1; border-radius: 12px; background: var(--n5); overflow: hidden; }
-  .result .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .result .name { font-size: 13px; font-weight: 600; color: var(--n1); line-height: 1.3;
-    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding: 0 2px; }
-  .result .sub { font-size: 11px; color: var(--n2); overflow: hidden; text-overflow: ellipsis;
-    white-space: nowrap; padding: 0 2px 2px; }
-  .result .acts { display: flex; gap: 6px; }
-  .result .acts button { flex: 1; height: 30px; padding: 0 8px; font-size: 11px; font-weight: 600; }
-
-  /* Queue panel */
-  .queue { padding: 20px; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow: hidden;
-    display: flex; flex-direction: column; }
-  .queue h2 { font-size: 16px; font-weight: 700; margin: 0 0 4px; color: var(--n1); }
-  .queue .hint { font-size: 12px; color: var(--n2); margin-bottom: 14px; }
-  .queue-list { overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
-    margin: 0 -8px; padding: 0 8px; }
-  .queue-list::-webkit-scrollbar { width: 6px; }
-  .queue-list::-webkit-scrollbar-thumb { background: var(--n4); border-radius: 999px; }
-  .q-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px;
-    border-radius: 10px; transition: background 0.12s; }
-  .q-item:hover { background: var(--n5); }
-  .q-item .num { font-size: 11px; color: var(--n3); width: 18px; text-align: right; font-variant-numeric: tabular-nums; }
-  .q-item .thumb { width: 36px; height: 36px; border-radius: 6px; background: var(--n5); overflow: hidden; flex-shrink: 0; }
-  .q-item .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .q-item .qmeta { min-width: 0; flex: 1; }
-  .q-item .qname { font-size: 13px; font-weight: 500; color: var(--n1);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .q-item .qartist { font-size: 11px; color: var(--n2);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .q-empty { font-size: 13px; color: var(--n3); text-align: center; padding: 24px 0; }
-
-  /* Shuffle banner */
-  .shuffle-banner { display: none; align-items: center; gap: 8px;
+  .badges { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 11px; border-radius: 999px;
+    background: var(--forest-light); color: var(--forest);
+  }
+  .badge.playing { background: var(--mint-light); color: var(--forest); }
+  .badge.shuffle {
     background: linear-gradient(90deg, var(--plum) 0%, var(--forest-mid) 100%);
-    color: white; padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;
-    box-shadow: var(--shadow-sm); margin-bottom: 16px; width: fit-content;
-    animation: pulse-glow 2s ease-in-out infinite; }
-  .shuffle-banner.on { display: inline-flex; }
-  .shuffle-banner .dot { width: 8px; height: 8px; border-radius: 50%; background: white; }
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(123,104,174,.35); }
-    50% { box-shadow: 0 0 0 8px rgba(123,104,174,0); }
+    color: white; box-shadow: 0 4px 12px rgba(123,104,174,.25);
+    animation: shuffle-glow 2.5s ease-in-out infinite;
+  }
+  @keyframes shuffle-glow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(123,104,174,.25); }
+    50% { box-shadow: 0 4px 20px rgba(123,104,174,.5); }
+  }
+  .badge.hidden { display: none; }
+  .playing-bars { display: inline-flex; gap: 2px; align-items: flex-end; height: 10px; }
+  .playing-bars span { display: block; width: 2px; background: currentColor; border-radius: 1px;
+    animation: bar 1s ease-in-out infinite; }
+  .playing-bars span:nth-child(1) { height: 60%; animation-delay: -.2s; }
+  .playing-bars span:nth-child(2) { height: 100%; animation-delay: -.4s; }
+  .playing-bars span:nth-child(3) { height: 40%; animation-delay: -.6s; }
+  @keyframes bar { 0%,100% { height: 20%; } 50% { height: 100%; } }
+
+  .now .title {
+    font-family: "Gellix", "Inter", sans-serif;
+    font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+    color: var(--n1); margin: 0 0 6px;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .now .artist {
+    font-size: 15px; color: var(--n2); margin: 0 0 20px; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .progress {
+    height: 4px; background: var(--n4); border-radius: 999px; overflow: hidden;
+    margin-bottom: 8px; position: relative;
+  }
+  .progress > div {
+    height: 100%; background: var(--forest); width: 0%;
+    transition: width 1s linear; border-radius: 999px;
+  }
+  .times {
+    display: flex; justify-content: space-between; font-size: 11px; color: var(--n3);
+    font-variant-numeric: tabular-nums; font-weight: 500; margin-bottom: 20px;
   }
 
-  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--n1); color: white; padding: 12px 20px; border-radius: 999px;
-    font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.2s; pointer-events: none;
-    box-shadow: var(--shadow-lg); z-index: 100; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .empty { color: var(--n3); font-size: 13px; padding: 48px 0; text-align: center; grid-column: 1 / -1; }
+  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-  .playing-indicator { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; margin-right: 6px; }
-  .playing-indicator span { display: block; width: 2px; background: var(--forest-mid); border-radius: 1px;
-    animation: bar 1s ease-in-out infinite; }
-  .playing-indicator span:nth-child(1) { height: 60%; animation-delay: -.2s; }
-  .playing-indicator span:nth-child(2) { height: 100%; animation-delay: -.4s; }
-  .playing-indicator span:nth-child(3) { height: 40%; animation-delay: -.6s; }
-  @keyframes bar { 0%,100% { height: 20%; } 50% { height: 100%; } }
+  /* ============ BUTTONS ============ */
+  button.ctrl {
+    appearance: none; border: 1px solid var(--n4); background: white; color: var(--n1);
+    height: 42px; padding: 0 16px; border-radius: 999px;
+    font: inherit; font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+    cursor: pointer; transition: all 0.18s cubic-bezier(.2,.8,.2,1);
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap;
+  }
+  button.ctrl:hover {
+    background: var(--n5); border-color: var(--n3);
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35,35,44,.06);
+  }
+  button.ctrl:active { transform: translateY(0); }
+  button.ctrl.icon { width: 42px; padding: 0; font-size: 16px; }
+  button.ctrl.big { height: 52px; width: 52px; font-size: 20px; border-radius: 50%; }
+  button.ctrl.primary {
+    background: var(--forest); border-color: var(--forest); color: white;
+    box-shadow: 0 4px 14px rgba(47,79,63,.3);
+  }
+  button.ctrl.primary:hover {
+    background: var(--forest); border-color: var(--forest);
+    box-shadow: 0 6px 20px rgba(47,79,63,.4); transform: translateY(-2px);
+  }
+  button.ctrl.toggle.active {
+    background: var(--forest-light); border-color: var(--forest-mid); color: var(--forest);
+  }
+  button.ctrl.toggle.active::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--forest);
+  }
+  button.ctrl.ghost { background: transparent; border-color: transparent; color: var(--n2); }
+  button.ctrl.ghost:hover { background: var(--n5); color: var(--n1); }
+  button.ctrl.danger { color: var(--red); }
+  button.ctrl.danger:hover { background: var(--coral-light); border-color: var(--coral); color: var(--red); }
+
+  .vol {
+    display: flex; align-items: center; gap: 10px; margin-left: auto;
+    background: white; padding: 0 16px; height: 42px; border-radius: 999px;
+    border: 1px solid var(--n4);
+  }
+  .vol input[type=range] {
+    accent-color: var(--forest); width: 110px; cursor: pointer;
+  }
+  .vol .val { font-size: 12px; color: var(--n2); width: 26px; text-align: right;
+    font-variant-numeric: tabular-nums; font-weight: 600; }
+  .vol .icon { font-size: 14px; }
+
+  /* ============ SEARCH ============ */
+  .search { padding: 28px; margin-top: 24px; }
+  .tabs {
+    display: flex; gap: 2px; margin-bottom: 18px; background: var(--n5);
+    padding: 4px; border-radius: 999px; width: fit-content;
+  }
+  .tab {
+    font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 999px;
+    color: var(--n2); cursor: pointer; transition: all 0.18s;
+  }
+  .tab:hover { color: var(--n1); }
+  .tab.active {
+    background: white; color: var(--n1);
+    box-shadow: 0 2px 6px rgba(35,35,44,.06);
+  }
+  .search-row { display: flex; gap: 10px; }
+  .search-row input {
+    flex: 1; height: 54px; border-radius: 16px; border: 1px solid var(--n4);
+    padding: 0 20px; font: inherit; font-size: 15px; font-weight: 500;
+    background: white; color: var(--n1); outline: none;
+    transition: all 0.18s; box-shadow: 0 1px 2px rgba(35,35,44,.03);
+  }
+  .search-row input:focus {
+    border-color: var(--forest-mid);
+    box-shadow: 0 0 0 4px rgba(106,156,128,.15);
+  }
+  .search-row input::placeholder { color: var(--n3); font-weight: 400; }
+  .search-row button { height: 54px; padding: 0 24px; }
+
+  .grid {
+    margin-top: 20px; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px;
+  }
+  .result {
+    background: white; border: 1px solid var(--n4); border-radius: 18px; padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: all 0.2s cubic-bezier(.2,.8,.2,1);
+    position: relative; overflow: hidden;
+  }
+  .result:hover {
+    border-color: var(--forest-mid); transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(35,35,44,.08);
+  }
+  .result .art {
+    width: 100%; aspect-ratio: 1; border-radius: 12px;
+    background: var(--n5); overflow: hidden; position: relative;
+  }
+  .result .art img { width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 0.4s; }
+  .result:hover .art img { transform: scale(1.05); }
+  .result .name {
+    font-size: 13px; font-weight: 700; color: var(--n1); line-height: 1.3;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    padding: 0 2px;
+  }
+  .result .sub {
+    font-size: 11px; color: var(--n2); font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px 2px;
+  }
+  .result .acts { display: flex; gap: 5px; }
+  .result .acts button {
+    flex: 1; height: 32px; padding: 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  }
+
+  /* ============ QUEUE PANEL ============ */
+  .queue {
+    padding: 22px; position: sticky; top: 24px;
+    max-height: calc(100vh - 48px); display: flex; flex-direction: column;
+  }
+  .queue-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+  .queue h2 {
+    font-family: "Gellix", "Inter", sans-serif;
+    font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--n1);
+  }
+  .queue .count {
+    font-size: 12px; color: var(--n2); font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .queue .hint { font-size: 11px; color: var(--n3); margin-bottom: 14px; font-weight: 500; }
+  .queue-actions {
+    display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .queue-actions button {
+    height: 32px; padding: 0 12px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .queue-list {
+    overflow-y: auto; display: flex; flex-direction: column; gap: 3px;
+    margin: 0 -10px; padding: 0 10px;
+    scroll-behavior: smooth;
+  }
+  .queue-list::-webkit-scrollbar { width: 5px; }
+  .queue-list::-webkit-scrollbar-thumb { background: var(--n4); border-radius: 999px; }
+  .queue-list::-webkit-scrollbar-thumb:hover { background: var(--n3); }
+
+  .q-item {
+    display: flex; align-items: center; gap: 10px; padding: 7px 8px;
+    border-radius: 12px; transition: background 0.15s;
+    cursor: grab; position: relative;
+  }
+  .q-item:hover { background: var(--n5); }
+  .q-item:active { cursor: grabbing; }
+  .q-item.dragging { opacity: 0.35; }
+  .q-item.drag-over { background: var(--forest-light); }
+  .q-item .num {
+    font-size: 11px; color: var(--n3); width: 18px; text-align: right;
+    font-variant-numeric: tabular-nums; font-weight: 600; flex-shrink: 0;
+  }
+  .q-item .thumb {
+    width: 40px; height: 40px; border-radius: 8px; background: var(--n5);
+    overflow: hidden; flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .q-item .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .q-item .qmeta { min-width: 0; flex: 1; overflow: hidden; }
+  .q-item .qname {
+    font-size: 13px; font-weight: 600; color: var(--n1);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .q-item .qartist {
+    font-size: 11px; color: var(--n2); font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .q-item .q-actions {
+    display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0;
+  }
+  .q-item:hover .q-actions { opacity: 1; }
+  .q-item .q-actions button {
+    width: 26px; height: 26px; padding: 0; border-radius: 8px;
+    background: transparent; border: none; color: var(--n2); cursor: pointer;
+    font-size: 12px; display: grid; place-items: center;
+    transition: all 0.15s;
+  }
+  .q-item .q-actions button:hover { background: var(--n4); color: var(--n1); }
+  .q-item .q-actions button.rm:hover { background: var(--coral-light); color: var(--red); }
+  .q-empty {
+    font-size: 13px; color: var(--n3); text-align: center; padding: 32px 0;
+    font-weight: 500;
+  }
+  .q-empty .emoji { font-size: 28px; display: block; margin-bottom: 8px; opacity: 0.6; }
+
+  /* ============ TOAST ============ */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%;
+    transform: translateX(-50%) translateY(30px);
+    background: var(--n1); color: white; padding: 14px 24px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; opacity: 0;
+    transition: all 0.25s cubic-bezier(.2,.8,.2,1);
+    pointer-events: none; z-index: 100;
+    box-shadow: 0 16px 32px rgba(35,35,44,.3);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .empty {
+    color: var(--n3); font-size: 14px; padding: 48px 0; text-align: center;
+    grid-column: 1 / -1; font-weight: 500;
+  }
+
+  /* ============ DIALOG ============ */
+  .confirm-backdrop {
+    position: fixed; inset: 0; background: rgba(35,35,44,.4);
+    backdrop-filter: blur(4px); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .confirm-backdrop.show { display: flex; }
+  .confirm {
+    background: white; border-radius: 24px; padding: 28px; max-width: 360px;
+    box-shadow: 0 24px 48px rgba(35,35,44,.2);
+  }
+  .confirm h3 { font-size: 18px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .confirm p { font-size: 14px; color: var(--n2); margin: 0 0 20px; line-height: 1.5; }
+  .confirm .row { display: flex; gap: 8px; justify-content: flex-end; }
 </style>
 </head>
 <body>
@@ -186,31 +398,37 @@
       <div class="logo">B</div>
       <div>
         <h1>Bondu Jukebox</h1>
-        <div class="sub">office speaker control</div>
+        <div class="sub">Office speaker control</div>
       </div>
     </div>
+    <div class="status-dot"><span class="dot"></span>Live</div>
   </header>
 
   <div class="layout">
     <div>
+      <!-- Now playing -->
       <section class="card now">
-        <div class="art"><img id="np-img" alt="" style="opacity:0" /></div>
+        <div class="art" id="np-art"><img id="np-img" alt="" style="opacity:0" /></div>
         <div class="meta">
-          <div id="shuffle-banner" class="shuffle-banner">
-            <span class="dot"></span> SHUFFLE ON
+          <div class="badges">
+            <div class="badge playing hidden" id="badge-playing">
+              <span class="playing-bars"><span></span><span></span><span></span></span>
+              Now playing
+            </div>
+            <div class="badge hidden" id="badge-paused">Paused</div>
+            <div class="badge shuffle hidden" id="badge-shuffle">🔀 Shuffle on</div>
           </div>
-          <div class="eyebrow" id="np-eyebrow">Now playing</div>
           <p class="title" id="np-title">Nothing playing</p>
-          <p class="artist" id="np-artist">—</p>
+          <p class="artist" id="np-artist">Search for something below</p>
           <div class="progress"><div id="np-bar"></div></div>
           <div class="times"><span id="np-pos">0:00</span><span id="np-dur">0:00</span></div>
           <div class="controls">
-            <button class="ctrl" id="btn-prev" title="Previous">⏮</button>
-            <button class="ctrl primary big" id="btn-play">▶ Play</button>
-            <button class="ctrl" id="btn-skip" title="Skip">⏭</button>
+            <button class="ctrl icon" id="btn-prev" title="Previous">⏮</button>
+            <button class="ctrl primary big" id="btn-play" title="Play/Pause">▶</button>
+            <button class="ctrl icon" id="btn-skip" title="Skip">⏭</button>
             <button class="ctrl toggle" id="btn-shuf" title="Shuffle">🔀 Shuffle</button>
             <div class="vol">
-              <span class="label">🔊</span>
+              <span class="icon">🔊</span>
               <input type="range" min="0" max="100" id="vol" />
               <span class="val" id="vol-val">—</span>
             </div>
@@ -218,6 +436,7 @@
         </div>
       </section>
 
+      <!-- Search -->
       <section class="card search">
         <div class="tabs">
           <div class="tab active" data-kind="track">Tracks</div>
@@ -226,18 +445,29 @@
           <div class="tab" data-kind="artist">Artists</div>
         </div>
         <div class="search-row">
-          <input id="q" placeholder="Search Spotify…" autocomplete="off" />
-          <button class="ctrl primary big" id="btn-search">Search</button>
+          <input id="q" placeholder="Search Spotify for tracks, albums, playlists…" autocomplete="off" />
+          <button class="ctrl primary" id="btn-search">Search</button>
         </div>
         <div class="grid" id="results"></div>
       </section>
     </div>
 
+    <!-- Queue sidebar -->
     <aside class="card queue">
-      <h2>Up next</h2>
-      <div class="hint" id="queue-hint">Queue from any search result</div>
+      <div class="queue-head">
+        <h2>Up next</h2>
+        <span class="count" id="q-count">0</span>
+      </div>
+      <div class="hint">Drag to reorder · click ✕ to remove</div>
+      <div class="queue-actions">
+        <button class="ctrl" id="btn-qshuffle" title="Reshuffle queue">🔀 Shuffle</button>
+        <button class="ctrl danger" id="btn-qclear" title="Clear queue">🗑 Clear</button>
+      </div>
       <div class="queue-list" id="queue-list">
-        <div class="q-empty">Nothing queued</div>
+        <div class="q-empty">
+          <span class="emoji">🎵</span>
+          Nothing queued yet
+        </div>
       </div>
     </aside>
   </div>
@@ -245,8 +475,20 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="confirm-backdrop" id="confirm">
+  <div class="confirm">
+    <h3>Clear the queue?</h3>
+    <p>This removes all <span id="confirm-count">0</span> queued tracks. Current playback won't be affected.</p>
+    <div class="row">
+      <button class="ctrl ghost" id="confirm-no">Cancel</button>
+      <button class="ctrl primary" id="confirm-yes">Clear all</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let kind = "track";
+  let currentQueue = [];
   const $ = (id) => document.getElementById(id);
 
   function toast(msg) {
@@ -262,19 +504,23 @@
     return r.json();
   }
 
+  // ====== NOW PLAYING ======
   async function refreshNow() {
     try {
       const s = await j("/api/now");
+      const art = $("np-art");
       if (!s || !s.name) {
         $("np-title").textContent = "Nothing playing";
-        $("np-artist").textContent = "—";
+        $("np-artist").textContent = "Search for something below";
         $("np-img").src = ""; $("np-img").style.opacity = 0;
         $("np-bar").style.width = "0%";
         $("np-pos").textContent = "0:00"; $("np-dur").textContent = "0:00";
-        $("btn-play").innerHTML = "▶ Play";
+        $("btn-play").textContent = "▶";
         $("btn-shuf").classList.remove("active");
-        $("shuffle-banner").classList.remove("on");
-        $("np-eyebrow").textContent = "Now playing";
+        $("badge-playing").classList.add("hidden");
+        $("badge-paused").classList.add("hidden");
+        $("badge-shuffle").classList.add("hidden");
+        art.classList.remove("playing");
         return;
       }
       $("np-title").textContent = s.name;
@@ -285,40 +531,97 @@
       $("np-pos").textContent = fmt(s.progress_ms);
       $("np-dur").textContent = fmt(s.duration_ms);
       if (s.is_playing) {
-        $("btn-play").innerHTML = "⏸ Pause";
-        $("np-eyebrow").innerHTML = '<span class="playing-indicator"><span></span><span></span><span></span></span>Now playing';
+        $("btn-play").textContent = "⏸";
+        $("badge-playing").classList.remove("hidden");
+        $("badge-paused").classList.add("hidden");
+        art.classList.add("playing");
       } else {
-        $("btn-play").innerHTML = "▶ Play";
-        $("np-eyebrow").textContent = "Paused";
+        $("btn-play").textContent = "▶";
+        $("badge-playing").classList.add("hidden");
+        $("badge-paused").classList.remove("hidden");
+        art.classList.remove("playing");
       }
       $("btn-shuf").classList.toggle("active", !!s.shuffle);
-      $("shuffle-banner").classList.toggle("on", !!s.shuffle);
+      $("badge-shuffle").classList.toggle("hidden", !s.shuffle);
       if (document.activeElement !== $("vol")) { $("vol").value = s.volume; $("vol-val").textContent = s.volume; }
-    } catch (e) { /* keep state */ }
-  }
-
-  async function refreshQueue() {
-    try {
-      const r = await j("/api/queue");
-      const list = $("queue-list"); list.innerHTML = "";
-      if (!r.items || !r.items.length) {
-        list.innerHTML = '<div class="q-empty">Nothing queued</div>';
-        return;
-      }
-      r.items.forEach((t, i) => {
-        const el = document.createElement("div"); el.className = "q-item";
-        el.innerHTML = `
-          <div class="num">${i + 1}</div>
-          <div class="thumb">${t.image ? `<img src="${t.image}"/>` : ""}</div>
-          <div class="qmeta">
-            <div class="qname">${escapeHtml(t.name)}</div>
-            <div class="qartist">${escapeHtml(t.artist)}</div>
-          </div>`;
-        list.appendChild(el);
-      });
     } catch (e) {}
   }
 
+  // ====== QUEUE ======
+  async function refreshQueue() {
+    try {
+      const r = await j("/api/queue");
+      currentQueue = r.items || [];
+      renderQueue();
+    } catch (e) {}
+  }
+
+  function renderQueue() {
+    const list = $("queue-list");
+    $("q-count").textContent = currentQueue.length;
+    if (!currentQueue.length) {
+      list.innerHTML = '<div class="q-empty"><span class="emoji">🎵</span>Nothing queued yet</div>';
+      return;
+    }
+    list.innerHTML = "";
+    currentQueue.forEach((t, i) => {
+      const el = document.createElement("div");
+      el.className = "q-item"; el.draggable = true; el.dataset.index = i;
+      el.innerHTML = `
+        <div class="num">${i + 1}</div>
+        <div class="thumb">${t.image ? `<img src="${escapeHtml(t.image)}"/>` : ""}</div>
+        <div class="qmeta">
+          <div class="qname">${escapeHtml(t.name)}</div>
+          <div class="qartist">${escapeHtml(t.artist)}</div>
+        </div>
+        <div class="q-actions">
+          <button class="skip" title="Play next">▸</button>
+          <button class="rm" title="Remove">✕</button>
+        </div>`;
+      el.querySelector(".rm").onclick = async (e) => {
+        e.stopPropagation();
+        await j("/api/queue/remove", { method: "POST", body: JSON.stringify({ index: i }) });
+        toast("Removed");
+        refreshQueue();
+      };
+      el.querySelector(".skip").onclick = async (e) => {
+        e.stopPropagation();
+        await j("/api/queue/skipto", { method: "POST", body: JSON.stringify({ index: i }) });
+        toast("Skipping to " + t.name);
+        setTimeout(() => { refreshNow(); refreshQueue(); }, 600);
+      };
+      wireDrag(el);
+      list.appendChild(el);
+    });
+  }
+
+  // Drag & drop reorder
+  let dragSrc = null;
+  function wireDrag(el) {
+    el.addEventListener("dragstart", (e) => {
+      dragSrc = +el.dataset.index;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      document.querySelectorAll(".q-item").forEach(x => x.classList.remove("drag-over"));
+    });
+    el.addEventListener("dragover", (e) => {
+      e.preventDefault(); e.dataTransfer.dropEffect = "move";
+      document.querySelectorAll(".q-item").forEach(x => x.classList.remove("drag-over"));
+      el.classList.add("drag-over");
+    });
+    el.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      const dst = +el.dataset.index;
+      if (dragSrc == null || dragSrc === dst) return;
+      await j("/api/queue/move", { method: "POST", body: JSON.stringify({ src: dragSrc, dst }) });
+      refreshQueue();
+    });
+  }
+
+  // ====== SEARCH ======
   async function search() {
     const q = $("q").value.trim(); if (!q) return;
     const r = await j("/api/search", { method: "POST", body: JSON.stringify({ q, kind }) });
@@ -327,7 +630,7 @@
     for (const it of r.items) {
       const card = document.createElement("div"); card.className = "result";
       card.innerHTML = `
-        <div class="art">${it.image ? `<img src="${it.image}"/>` : ""}</div>
+        <div class="art">${it.image ? `<img src="${escapeHtml(it.image)}"/>` : ""}</div>
         <div class="name">${escapeHtml(it.name)}</div>
         <div class="sub">${escapeHtml(it.subtitle || "")}</div>
         <div class="acts">
@@ -337,19 +640,21 @@
       card.querySelector('[data-act="play"]').onclick = async (e) => {
         e.stopPropagation();
         await j("/api/play", { method: "POST", body: JSON.stringify({ uri: it.uri, kind }) });
-        toast("Playing " + it.name); setTimeout(() => { refreshNow(); refreshQueue(); }, 500);
+        toast("Playing " + it.name);
+        setTimeout(() => { refreshNow(); refreshQueue(); }, 500);
       };
       const qb = card.querySelector('[data-act="queue"]');
       if (qb) qb.onclick = async (e) => {
         e.stopPropagation();
         await j("/api/queue", { method: "POST", body: JSON.stringify({ uri: it.uri }) });
         toast("Queued " + it.name);
-        setTimeout(refreshQueue, 500);
+        setTimeout(refreshQueue, 300);
       };
       grid.appendChild(card);
     }
   }
 
+  // ====== WIRE EVENTS ======
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
     document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
     t.classList.add("active"); kind = t.dataset.kind;
@@ -359,18 +664,46 @@
   $("q").addEventListener("keydown", e => { if (e.key === "Enter") search(); });
 
   $("btn-play").onclick = async () => {
-    const playing = $("btn-play").textContent.includes("Pause");
+    const playing = $("btn-play").textContent === "⏸";
     await j(playing ? "/api/pause" : "/api/resume", { method: "POST" });
     setTimeout(refreshNow, 300);
   };
-  $("btn-skip").onclick = async () => { await j("/api/skip", { method: "POST" }); setTimeout(() => { refreshNow(); refreshQueue(); }, 400); };
-  $("btn-prev").onclick = async () => { await j("/api/prev", { method: "POST" }); setTimeout(refreshNow, 400); };
+  $("btn-skip").onclick = async () => {
+    await j("/api/skip", { method: "POST" });
+    setTimeout(() => { refreshNow(); refreshQueue(); }, 400);
+  };
+  $("btn-prev").onclick = async () => {
+    await j("/api/prev", { method: "POST" });
+    setTimeout(refreshNow, 400);
+  };
   $("btn-shuf").onclick = async () => {
     const newState = !$("btn-shuf").classList.contains("active");
     await j("/api/shuffle", { method: "POST", body: JSON.stringify({ state: newState }) });
     toast("Shuffle " + (newState ? "on" : "off"));
     setTimeout(refreshNow, 300);
   };
+  $("btn-qshuffle").onclick = async () => {
+    if (!currentQueue.length) return toast("Queue is empty");
+    await j("/api/queue/shuffle", { method: "POST" });
+    toast("Queue reshuffled");
+    refreshQueue();
+  };
+  $("btn-qclear").onclick = () => {
+    if (!currentQueue.length) return toast("Queue already empty");
+    $("confirm-count").textContent = currentQueue.length;
+    $("confirm").classList.add("show");
+  };
+  $("confirm-no").onclick = () => $("confirm").classList.remove("show");
+  $("confirm-yes").onclick = async () => {
+    await j("/api/queue/clear", { method: "POST" });
+    $("confirm").classList.remove("show");
+    toast("Queue cleared");
+    refreshQueue();
+  };
+  $("confirm").addEventListener("click", (e) => {
+    if (e.target.id === "confirm") $("confirm").classList.remove("show");
+  });
+
   let volT;
   $("vol").addEventListener("input", e => {
     $("vol-val").textContent = e.target.value;
@@ -380,7 +713,7 @@
 
   refreshNow(); refreshQueue();
   setInterval(refreshNow, 3000);
-  setInterval(refreshQueue, 6000);
+  setInterval(refreshQueue, 5000);
 </script>
 </body>
 </html>

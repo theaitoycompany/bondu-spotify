@@ -11,6 +11,7 @@ from pydantic import BaseModel
 load_dotenv()
 
 from spotify_client import sp, ensure_device, now_playing  # noqa: E402
+from queue_manager import queue_manager  # noqa: E402
 
 SLACK_ENABLED = bool(os.environ.get("SLACK_BOT_TOKEN") and os.environ.get("SLACK_APP_TOKEN"))
 if SLACK_ENABLED:
@@ -32,22 +33,51 @@ def api_now():
 
 @api.get("/api/queue")
 def api_queue_list():
+    return {"items": queue_manager.list()}
+
+
+class QueueMoveReq(BaseModel):
+    src: int
+    dst: int
+
+
+@api.post("/api/queue/move")
+def api_queue_move(req: QueueMoveReq):
+    queue_manager.move(req.src, req.dst)
+    return {"ok": True}
+
+
+@api.post("/api/queue/clear")
+def api_queue_clear():
+    queue_manager.clear()
+    return {"ok": True}
+
+
+@api.post("/api/queue/shuffle")
+def api_queue_shuffle():
+    queue_manager.shuffle()
+    return {"ok": True}
+
+
+class QueueIndexReq(BaseModel):
+    index: int
+
+
+@api.post("/api/queue/remove")
+def api_queue_remove(req: QueueIndexReq):
+    queue_manager.remove(req.index)
+    return {"ok": True}
+
+
+@api.post("/api/queue/skipto")
+def api_queue_skipto(req: QueueIndexReq):
+    """Skip straight to item at index (drops everything before it, then skips)."""
+    queue_manager.skip_to(req.index)
     try:
-        q = sp.queue()
+        sp.next_track()
     except Exception:
-        return {"items": []}
-    items = []
-    for t in (q.get("queue") or [])[:20]:
-        if not t:
-            continue
-        images = t.get("album", {}).get("images", [])
-        items.append({
-            "uri": t["uri"],
-            "name": t["name"],
-            "artist": ", ".join(a["name"] for a in t["artists"]),
-            "image": images[-1]["url"] if images else None,
-        })
-    return {"items": items}
+        pass
+    return {"ok": True}
 
 
 class SearchReq(BaseModel):
@@ -119,11 +149,8 @@ class QueueReq(BaseModel):
 
 @api.post("/api/queue")
 def api_queue(req: QueueReq):
-    device_id = ensure_device()
-    if not device_id:
-        raise HTTPException(503, "no device available")
-    sp.add_to_queue(req.uri, device_id=device_id)
-    return {"ok": True}
+    track = queue_manager.add(req.uri)
+    return {"ok": True, "track": track}
 
 
 @api.post("/api/pause")

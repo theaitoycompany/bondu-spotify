@@ -1,5 +1,6 @@
 .env
 .cache
+queue.json
 __pycache__/
 *.pyc
 venv/
