@@ -445,7 +445,7 @@
           <div class="tab" data-kind="artist">Artists</div>
         </div>
         <div class="search-row">
-          <input id="q" placeholder="Search Spotify for tracks, albums, playlists…" autocomplete="off" />
+          <input id="q" placeholder="Search or paste a Spotify link…" autocomplete="off" />
           <button class="ctrl primary" id="btn-search">Search</button>
         </div>
         <div class="grid" id="results"></div>
@@ -622,8 +622,46 @@
   }
 
   // ====== SEARCH ======
+  function isSpotifyUrl(s) {
+    return /^spotify:(track|album|playlist|artist):/.test(s) ||
+           /open\.spotify\.com\/(intl-[a-z]+\/)?(track|album|playlist|artist)\//.test(s);
+  }
+
+  async function resolveAndShow(url) {
+    try {
+      const it = await j("/api/resolve", { method: "POST", body: JSON.stringify({ url }) });
+      const grid = $("results"); grid.innerHTML = "";
+      const card = document.createElement("div"); card.className = "result";
+      card.innerHTML = `
+        <div class="art">${it.image ? `<img src="${escapeHtml(it.image)}"/>` : ""}</div>
+        <div class="name">${escapeHtml(it.name)}</div>
+        <div class="sub">${escapeHtml(it.subtitle || "")} · ${it.kind}</div>
+        <div class="acts">
+          <button class="ctrl primary" data-act="play">Play</button>
+          ${it.kind === "track" ? '<button class="ctrl" data-act="queue">Queue</button>' : ""}
+        </div>`;
+      card.querySelector('[data-act="play"]').onclick = async (e) => {
+        e.stopPropagation();
+        await j("/api/play", { method: "POST", body: JSON.stringify({ uri: it.uri, kind: it.kind }) });
+        toast("Playing " + it.name);
+        setTimeout(() => { refreshNow(); refreshQueue(); }, 500);
+      };
+      const qb = card.querySelector('[data-act="queue"]');
+      if (qb) qb.onclick = async (e) => {
+        e.stopPropagation();
+        await j("/api/queue", { method: "POST", body: JSON.stringify({ uri: it.uri }) });
+        toast("Queued " + it.name);
+        setTimeout(refreshQueue, 300);
+      };
+      grid.appendChild(card);
+    } catch (e) {
+      toast("Couldn't resolve that URL");
+    }
+  }
+
   async function search() {
     const q = $("q").value.trim(); if (!q) return;
+    if (isSpotifyUrl(q)) { return resolveAndShow(q); }
     const r = await j("/api/search", { method: "POST", body: JSON.stringify({ q, kind }) });
     const grid = $("results"); grid.innerHTML = "";
     if (!r.items.length) { grid.innerHTML = '<div class="empty">No results</div>'; return; }
@@ -662,6 +700,14 @@
   });
   $("btn-search").onclick = search;
   $("q").addEventListener("keydown", e => { if (e.key === "Enter") search(); });
+  $("q").addEventListener("paste", e => {
+    const pasted = (e.clipboardData || window.clipboardData).getData("text");
+    if (isSpotifyUrl(pasted)) {
+      e.preventDefault();
+      $("q").value = pasted;
+      resolveAndShow(pasted);
+    }
+  });
 
   $("btn-play").onclick = async () => {
     const playing = $("btn-play").textContent === "⏸";

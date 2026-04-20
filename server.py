@@ -80,6 +80,54 @@ def api_queue_skipto(req: QueueIndexReq):
     return {"ok": True}
 
 
+class ResolveReq(BaseModel):
+    url: str
+
+
+def _parse_spotify_url(s: str):
+    s = s.strip()
+    if s.startswith("spotify:"):
+        parts = s.split(":")
+        if len(parts) >= 3:
+            return parts[1], parts[2], s
+    if "open.spotify.com/" in s:
+        tail = s.split("open.spotify.com/")[1]
+        if tail.startswith("intl-"):
+            tail = tail.split("/", 1)[1]
+        kind = tail.split("/")[0]
+        sid = tail.split("/")[1].split("?")[0].split("#")[0]
+        return kind, sid, f"spotify:{kind}:{sid}"
+    return None, None, None
+
+
+@api.post("/api/resolve")
+def api_resolve(req: ResolveReq):
+    kind, sid, uri = _parse_spotify_url(req.url)
+    if not kind:
+        raise HTTPException(400, "not a spotify url")
+    if kind == "track":
+        t = sp.track(sid)
+        return {"kind": "track", "uri": uri, "name": t["name"],
+                "subtitle": ", ".join(a["name"] for a in t["artists"]),
+                "image": (t["album"]["images"][0]["url"] if t["album"]["images"] else None)}
+    if kind == "album":
+        a = sp.album(sid)
+        return {"kind": "album", "uri": uri, "name": a["name"],
+                "subtitle": ", ".join(ar["name"] for ar in a["artists"]),
+                "image": (a["images"][0]["url"] if a["images"] else None)}
+    if kind == "playlist":
+        p = sp.playlist(sid, fields="name,owner(display_name),images")
+        return {"kind": "playlist", "uri": uri, "name": p["name"],
+                "subtitle": p["owner"]["display_name"],
+                "image": (p["images"][0]["url"] if p["images"] else None)}
+    if kind == "artist":
+        ar = sp.artist(sid)
+        return {"kind": "artist", "uri": uri, "name": ar["name"],
+                "subtitle": "Artist",
+                "image": (ar["images"][0]["url"] if ar["images"] else None)}
+    raise HTTPException(400, f"unsupported kind: {kind}")
+
+
 class SearchReq(BaseModel):
     q: str
     kind: str = "track"  # track | album | playlist | artist
