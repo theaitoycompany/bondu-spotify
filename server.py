@@ -30,6 +30,26 @@ def api_now():
     return now_playing() or {}
 
 
+@api.get("/api/queue")
+def api_queue_list():
+    try:
+        q = sp.queue()
+    except Exception:
+        return {"items": []}
+    items = []
+    for t in (q.get("queue") or [])[:20]:
+        if not t:
+            continue
+        images = t.get("album", {}).get("images", [])
+        items.append({
+            "uri": t["uri"],
+            "name": t["name"],
+            "artist": ", ".join(a["name"] for a in t["artists"]),
+            "image": images[-1]["url"] if images else None,
+        })
+    return {"items": items}
+
+
 class SearchReq(BaseModel):
     q: str
     kind: str = "track"  # track | album | playlist | artist
