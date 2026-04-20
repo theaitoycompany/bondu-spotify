@@ -39,8 +39,8 @@ class SearchReq(BaseModel):
 def api_search(req: SearchReq):
     if req.kind not in ("track", "album", "playlist", "artist"):
         raise HTTPException(400, "bad kind")
-    results = sp.search(q=req.q, type=req.kind, limit=12)
-    items = results[req.kind + "s"]["items"]
+    results = sp.search(q=req.q, type=req.kind, limit=10)
+    items = [it for it in results[req.kind + "s"]["items"] if it]
     out = []
     for it in items:
         if req.kind == "track":
