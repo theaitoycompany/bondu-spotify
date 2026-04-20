@@ -53,6 +53,32 @@ class QueueManager:
             self._save()
         return track
 
+    def add_tracks(self, tracks: list[dict]):
+        """Add pre-formatted track dicts (skip per-track API lookups)."""
+        with self.lock:
+            self.items.extend(tracks)
+            self._save()
+
+    def add_uris_bulk(self, uris: list[str]):
+        """Fetch metadata in batches of 50 and append. Much faster than add() in a loop."""
+        fetched = []
+        for i in range(0, len(uris), 50):
+            chunk_ids = [u.split(":")[-1] for u in uris[i:i+50]]
+            res = sp.tracks(chunk_ids)
+            for t in res.get("tracks", []):
+                if not t:
+                    continue
+                images = t.get("album", {}).get("images", [])
+                fetched.append({
+                    "uri": t["uri"],
+                    "name": t["name"],
+                    "artist": ", ".join(a["name"] for a in t["artists"]),
+                    "image": images[-1]["url"] if images else None,
+                    "duration_ms": t.get("duration_ms", 0),
+                })
+        self.add_tracks(fetched)
+        return fetched
+
     def remove(self, index: int):
         with self.lock:
             if 0 <= index < len(self.items):
@@ -77,13 +103,17 @@ class QueueManager:
             random.shuffle(self.items)
             self._save()
 
-    def skip_to(self, index: int):
-        """Skip ahead so the item at `index` plays next. Drops everything before it."""
+    def skip_to(self, index: int) -> Optional[dict]:
+        """Pop the item at `index` (dropping everything before it) and return it.
+        Caller should start playback with the returned track."""
         with self.lock:
-            if 0 <= index < len(self.items):
-                self.items = self.items[index:]
-                self._save()
-                self._last_handoff_uri = None  # force immediate re-queue
+            if not (0 <= index < len(self.items)):
+                return None
+            target = self.items[index]
+            self.items = self.items[index + 1:]
+            self._save()
+            self._last_handoff_uri = None
+            return target
 
     # ---- helpers ----
     def _fetch_track(self, uri: str) -> dict:

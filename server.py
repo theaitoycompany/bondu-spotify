@@ -71,13 +71,15 @@ def api_queue_remove(req: QueueIndexReq):
 
 @api.post("/api/queue/skipto")
 def api_queue_skipto(req: QueueIndexReq):
-    """Skip straight to item at index (drops everything before it, then skips)."""
-    queue_manager.skip_to(req.index)
-    try:
-        sp.next_track()
-    except Exception:
-        pass
-    return {"ok": True}
+    """Jump to the item at index: drop everything before it, play it now."""
+    target = queue_manager.skip_to(req.index)
+    if not target:
+        raise HTTPException(400, "index out of range")
+    device_id = ensure_device()
+    if not device_id:
+        raise HTTPException(503, "no device available")
+    sp.start_playback(device_id=device_id, uris=[target["uri"]])
+    return {"ok": True, "track": target}
 
 
 class ResolveReq(BaseModel):
@@ -173,6 +175,32 @@ class PlayReq(BaseModel):
     kind: str = "track"
 
 
+def _collect_uris(kind: str, uri: str) -> list[str]:
+    sid = uri.split(":")[-1]
+    if kind == "album":
+        items = sp.album_tracks(sid, limit=50)["items"]
+        return [t["uri"] for t in items if t]
+    if kind == "playlist":
+        uris = []
+        offset = 0
+        while True:
+            page = sp.playlist_items(sid, limit=100, offset=offset, fields="items(track(uri)),next")
+            for item in page.get("items", []):
+                tr = item.get("track")
+                if tr and tr.get("uri"):
+                    uris.append(tr["uri"])
+            if not page.get("next"):
+                break
+            offset += 100
+            if offset > 1000:
+                break
+        return uris
+    if kind == "artist":
+        top = sp.artist_top_tracks(sid)["tracks"]
+        return [t["uri"] for t in top]
+    return [uri]
+
+
 @api.post("/api/play")
 def api_play(req: PlayReq):
     device_id = ensure_device()
@@ -180,15 +208,18 @@ def api_play(req: PlayReq):
         raise HTTPException(503, "no device available")
     if req.kind == "track":
         sp.start_playback(device_id=device_id, uris=[req.uri])
-    elif req.kind == "artist":
-        artist_id = req.uri.split(":")[-1]
-        top = sp.artist_top_tracks(artist_id)["tracks"]
-        sp.start_playback(device_id=device_id, uris=[t["uri"] for t in top])
-    else:
-        sp.start_playback(device_id=device_id, context_uri=req.uri)
-        if req.kind == "playlist":
-            sp.shuffle(True, device_id=device_id)
-    return {"ok": True}
+        return {"ok": True}
+
+    uris = _collect_uris(req.kind, req.uri)
+    if not uris:
+        raise HTTPException(404, "no tracks found")
+
+    # Clear existing virtual queue, play first track, queue the rest in our manager
+    queue_manager.clear()
+    sp.start_playback(device_id=device_id, uris=[uris[0]])
+    if len(uris) > 1:
+        queue_manager.add_uris_bulk(uris[1:])
+    return {"ok": True, "queued": max(0, len(uris) - 1)}
 
 
 class QueueReq(BaseModel):
