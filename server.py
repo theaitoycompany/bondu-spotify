@@ -175,7 +175,7 @@ class PlayReq(BaseModel):
     kind: str = "track"
 
 
-def _collect_uris(kind: str, uri: str) -> list[str]:
+def _collect_uris(kind: str, uri: str):
     sid = uri.split(":")[-1]
     if kind == "album":
         items = sp.album_tracks(sid, limit=50)["items"]

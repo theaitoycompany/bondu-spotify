@@ -42,7 +42,7 @@ class QueueManager:
         STATE_FILE.write_text(json.dumps({"items": self.items}))
 
     # ---- public API ----
-    def list(self) -> list[dict]:
+    def list(self):
         with self.lock:
             return list(self.items)
 
@@ -53,13 +53,13 @@ class QueueManager:
             self._save()
         return track
 
-    def add_tracks(self, tracks: list[dict]):
+    def add_tracks(self, tracks):
         """Add pre-formatted track dicts (skip per-track API lookups)."""
         with self.lock:
             self.items.extend(tracks)
             self._save()
 
-    def add_uris_bulk(self, uris: list[str]):
+    def add_uris_bulk(self, uris):
         """Fetch metadata in batches of 50 and append. Much faster than add() in a loop."""
         fetched = []
         for i in range(0, len(uris), 50):
