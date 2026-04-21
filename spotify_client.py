@@ -1,5 +1,7 @@
 """Shared Spotify client + helpers used by both the Slack bot and the web UI."""
 import os
+import threading
+import time
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
@@ -23,8 +25,26 @@ sp = spotipy.Spotify(auth_manager=_auth)
 DEVICE_NAME = os.environ.get("SPOTIFY_DEVICE_NAME")
 
 
+_playback_cache = {"state": None, "ts": 0.0}
+_playback_lock = threading.Lock()
+PLAYBACK_TTL = 2.5
+
+
+def cached_playback(force=False):
+    """Single source of truth for current_playback(). Caches for ~2.5s so
+    frontend polls + queue tick don't duplicate upstream calls."""
+    now = time.time()
+    with _playback_lock:
+        if not force and _playback_cache["state"] is not None and (now - _playback_cache["ts"]) < PLAYBACK_TTL:
+            return _playback_cache["state"]
+        state = sp.current_playback()
+        _playback_cache["state"] = state
+        _playback_cache["ts"] = now
+        return state
+
+
 def ensure_device():
-    state = sp.current_playback()
+    state = cached_playback()
     if state and state.get("device") and state["device"].get("is_active"):
         return state["device"]["id"]
     devices = sp.devices().get("devices", [])
@@ -39,7 +59,7 @@ def ensure_device():
 
 
 def now_playing():
-    state = sp.current_playback()
+    state = cached_playback()
     if not state or not state.get("item"):
         return None
     t = state["item"]

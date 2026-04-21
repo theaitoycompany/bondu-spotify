@@ -14,11 +14,11 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from spotify_client import sp, ensure_device
+from spotify_client import sp, ensure_device, cached_playback
 
 STATE_FILE = Path(__file__).parent / "queue.json"
 HAND_OFF_MS = 8000  # push next track when current has this much left
-POLL_SEC = 3
+POLL_SEC = 5
 
 
 class QueueManager:
@@ -142,7 +142,7 @@ class QueueManager:
             if not self.items:
                 return
 
-        state = sp.current_playback()
+        state = cached_playback()
         if not state or not state.get("item"):
             return
 
